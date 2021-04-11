@@ -1,7 +1,9 @@
 from datetime import datetime
+from asyncio import create_task
 
 from application.users.entities.user_entity import UserEntity
 from .repository import CreateUserRepository
+from .send_email import send_welcome_email
 
 
 async def create_user_uc(data: dict) -> (str, int):
@@ -22,6 +24,8 @@ async def create_user_uc(data: dict) -> (str, int):
 
             await repo.persist_user(user)
             await repo.end()
+            create_task(send_welcome_email(user.name, user.email)).add_done_callback(lambda x: print("Email enviado"))
             return "Ok", 201
+        await repo.end()
         return "E-mail indisponível", 409
     return "Informações insuficientes", 400
